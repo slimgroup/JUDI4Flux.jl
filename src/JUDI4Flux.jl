@@ -24,7 +24,7 @@ module JUDI4Flux
 
     @grad function modeling(F::judiPDEfull, m::TrackedArray; q=nothing)
         J = judiJacobian(F, q)
-        return modeling(F, Tracker.data(m); q=q), Δ -> (nothing, adjoint(J) * Δ, nothing)
+        return modeling(F, Tracker.data(m); q=q), Δ -> (nothing, reshape(adjoint(J) * Δ, J.model.n[1], J.model.n[2], 1, 1), nothing)
     end
 
 end
