@@ -32,14 +32,15 @@ module JUDI4Flux
     function (FM::ForwardModel)(m::AbstractArray)
 
         Flocal = deepcopy(FM.F)    # don't overwrite model of original operator
-        Flocal.model.m = reshape(m, Flocal.model.n)  # reshape from Tensor into 2D/3D array
+        Flocal.model.m = m[:,:,1,1]
         if typeof(FM.q) == judiVector{Float32} || typeof(FM.q) == judiWeights{Float32}
             out = Flocal*FM.q
         else
             out = Flocal*vec(FM.q)
         end
-        print("Typeof(out): ", typeof(out), "\n")
-        return out
+        nt = Flocal.recGeometry.nt[1]
+        nrec = length(Flocal.recGeometry.xloc[1])
+        return reshape(out, nt, nrec, 1, 1)
     end
 
     function show(io::IO, FM::ForwardModel)
@@ -52,7 +53,7 @@ module JUDI4Flux
 
     @grad function (FM::ForwardModel)(m::TrackedArray)
         J = judiJacobian(FM.F, FM.q)
-        return FM(Tracker.data(m)), Δ -> (reshape(adjoint(J) * Δ, J.model.n[1], J.model.n[2]), nothing)
+        return FM(Tracker.data(m)), Δ -> (reshape(adjoint(J) * vec(Δ), J.model.n[1], J.model.n[2], 1, 1), nothing)
     end
 
 ####################################################################################################
