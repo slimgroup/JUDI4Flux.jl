@@ -4,11 +4,16 @@ module JUDI4Flux
     using JUDI.TimeModeling: judiWeights
     using JUDI.TimeModeling: judiPDEfull
     using JUDI.TimeModeling: judiVector
-    using Tracker, Flux, JOLI
+    using Tracker, Flux, JOLI, LinearAlgebra
     import Base.*
     import Tracker.@grad
     using Flux: @treelike
     export ForwardModel, ExtendedQForward, ExtendedQAdjoint
+
+    function my_norm(x; dt=1, p=2)
+        x = dt * sum(abs.(vec(x)).^p)
+        return x^(1.f0/p)
+    end
 
 ####################################################################################################
 
@@ -96,7 +101,7 @@ module JUDI4Flux
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
         Flocal = deepcopy(EQF.F)
         Flocal.model.m = m
-        J = judiJacobian(Flocal, w)
+        J = judiJacobian(Flocal, judiWeights(w))
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
     end
@@ -161,7 +166,7 @@ module JUDI4Flux
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
         Flocal = deepcopy(EQT.F)
         Flocal.model.m = m
-        J = judiJacobian(Flocal, Δw[:,:,1,1])
+        J = judiJacobian(Flocal, judiWeights(Δw[:,:,1,1]))
         Δm = adjoint(J) * vec(d)
         return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
     end
