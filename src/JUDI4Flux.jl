@@ -45,7 +45,7 @@ module JUDI4Flux
         end
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(out, nt, nrec, 1, 1)
+        return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
     end
 
     function show(io::IO, FM::ForwardModel)
@@ -77,7 +77,7 @@ module JUDI4Flux
         out = Flocal*vec(w)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(out, nt, nrec, 1, 1)
+        return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
     end
 
     function show(io::IO, EQF::ExtendedQForward)
@@ -93,9 +93,9 @@ module JUDI4Flux
 
     function grad_w(EQF::ExtendedQForward, m, Δd)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m
+        Flocal.model.m = m[:,:,1,1]
         Δw = adjoint(Flocal) * vec(Δd)
-        return reshape(Δw, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
+        return reshape(Δw, EQF.F.model.n[1], EQF.F.model.n[2], 1, EQF.F.info.nsrc)
     end
 
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
@@ -104,24 +104,23 @@ module JUDI4Flux
         J = judiJacobian(Flocal, judiWeights(w))
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
+
     end
 
     @grad function (EQF::ExtendedQForward)(w::TrackedArray, m::TrackedArray)
-        m =  Tracker.data(m[:,:,1,1])
-        w = Tracker.data(w[:,:,1,1])
-        return EQF(Tracker.data(w), Tracker.data(m)), Δ -> (grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ), nothing)
+        m =  Tracker.data(m)
+        w = Tracker.data(w)
+        return EQF(w, m), Δ -> (grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ), nothing)
     end
 
     @grad function (EQF::ExtendedQForward)(w::TrackedArray, m::AbstractArray)
-        m = m[:,:,1,1]
-        w = Tracker.data(w[:,:,1,1])
-        return EQF(Tracker.data(w), Tracker.data(m)), Δ -> (grad_w(EQF, m, Δ), nothing, nothing)
+        w = Tracker.data(w)
+        return EQF(w, m), Δ -> (grad_w(EQF, m, Δ), nothing, nothing)
     end
 
     @grad function (EQF::ExtendedQForward)(w::AbstractArray, m::TrackedArray)
-        m = Tracker.data(m[:,:,1,1])
-        w = w[:,:,1,1]
-        return EQF(Tracker.data(w), Tracker.data(m)), Δ -> (nothing, grad_m(EQF, w, m, Δ), nothing)
+        m = Tracker.data(m)
+        return EQF(w, m), Δ -> (nothing, grad_m(EQF, w, m, Δ), nothing)
     end
 
 
@@ -140,7 +139,7 @@ module JUDI4Flux
         Flocal = deepcopy(EQT.F)
         Flocal.model.m = m[:,:,1,1]
         out = adjoint(Flocal)*vec(d)
-        out = reshape(out, Flocal.model.n[1], Flocal.model.n[2], 1, 1)
+        out = reshape(out, Flocal.model.n[1], Flocal.model.n[2], 1, Flocal.info.nsrc)
         return out
     end
 
@@ -156,11 +155,11 @@ module JUDI4Flux
 
     function grad_d(EQT::ExtendedQAdjoint, m, Δw)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m
+        Flocal.model.m = m[:,:,1,1]
         Δd = Flocal * vec(Δw)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(Δd, nt, nrec, 1, 1)
+        return reshape(Δd, nt, nrec, 1, EQT.F.info.nsrc)
     end
 
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
@@ -172,21 +171,19 @@ module JUDI4Flux
     end
 
     @grad function (EQT::ExtendedQAdjoint)(d::TrackedArray, m::TrackedArray)
-        d = Tracker.data(d[:,:,1,1])
-        m = Tracker.data(m[:,:,1,1])
-        return EQT(Tracker.data(d), Tracker.data(m)), Δ -> (grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ), nothing)
+        d = Tracker.data(d)
+        m = Tracker.data(m)
+        return EQT(d, m), Δ -> (grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ), nothing)
     end
 
     @grad function (EQT::ExtendedQAdjoint)(d::TrackedArray, m::AbstractArray)
-        d = Tracker.data(d[:,:,1,1])
-        m = m[:,:,1,1]
-        return EQT(Tracker.data(d), m), Δ -> (grad_d(EQT, m, Δ), nothing, nothing)
+        d = Tracker.data(d)
+        return EQT(d, m), Δ -> (grad_d(EQT, m, Δ), nothing, nothing)
     end
 
     @grad function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::TrackedArray)
-        d = d[:,:,1,1]
-        m = Tracker.data(m[:,:,1,1])
-        return EQT(d, Tracker.data(m)), Δ -> (nothing, grad_m(EQT, d, m, Δ), nothing)
+        m = Tracker.data(m)
+        return EQT(d, m), Δ -> (nothing, grad_m(EQT, d, m, Δ), nothing)
 
     end
 
