@@ -15,6 +15,15 @@ module JUDI4Flux
         return x^(1.f0/p)
     end
 
+    function convert_to_cell(w)
+        nsrc = size(w, 4)
+        w_cell = Array{Array}(undef, nsrc)
+        for j=1:nsrc
+            w_cell[j] = w[:,:,1,j]
+        end
+        return w_cell
+    end
+
 ####################################################################################################
 
     # Linearized Born scattering
@@ -101,7 +110,7 @@ module JUDI4Flux
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
         Flocal = deepcopy(EQF.F)
         Flocal.model.m = m
-        J = judiJacobian(Flocal, judiWeights(w))
+        J = judiJacobian(Flocal, judiWeights(convert_to_cell(w)))
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
 
@@ -165,7 +174,7 @@ module JUDI4Flux
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
         Flocal = deepcopy(EQT.F)
         Flocal.model.m = m
-        J = judiJacobian(Flocal, judiWeights(Δw[:,:,1,1]))
+        J = judiJacobian(Flocal, judiWeights(convert_to_cell(Δw)))
         Δm = adjoint(J) * vec(d)
         return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
     end
