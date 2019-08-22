@@ -4,7 +4,7 @@ module JUDI4Flux
     using JUDI.TimeModeling: judiWeights
     using JUDI.TimeModeling: judiPDEfull
     using JUDI.TimeModeling: judiVector
-    using Tracker, Flux, JOLI, LinearAlgebra
+    using Tracker, Flux, JOLI
     import Base.*
     import Tracker.@grad
     using Flux: @treelike
