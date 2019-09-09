@@ -1,0 +1,13 @@
+name = "JUDI4Flux"
+uuid = "64d089a9-642e-40bf-b992-0fb13636391a"
+authors = ["Henryk Modzelewski <henryk_modzelewski@mac.com>"]
+version = "0.1.0"
+
+[deps]
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+JOLI = "bb331ad6-a1cf-11e9-23da-9bcb53c69f6f"
+JUDI = "f3b833dc-6b2e-5b9c-b940-873ed6319979"
+Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
+
+[compat]
+julia = ">= 0.7"
