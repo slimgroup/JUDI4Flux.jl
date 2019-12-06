@@ -2,7 +2,7 @@
 
 JUDI4Flux enables compositions of seismic modeling operators with (convolutional) neural networks. JUDI4Flux is an extension of [JUDI](https://github.com/slimgroup/JUDI.jl), a framework for seismic modeling and inversion with automatic code generation and performance optimization based on [Devito](https://www.devitoproject.org/). JUDI4Flux integrates JUDI's linear and non-linear modeling operators into the [Flux](https://github.com/FluxML/Flux.jl) deep learning library, thus allowing the implementation of *physics-driven* neural networks. For backpropagation, JUDI4Flux calls JUDI's adjoint PDE solvers, thus making it possible to backpropagate effieciently through single or multiple PDE layers and scale to large problem sizes.
 
-Features:
+**Features:**
 
  - Compatibility with the Julia [Flux](https://github.com/FluxML/Flux.jl) deep learning library. Both Flux and JUDI are based on abstract high-level mathematical expressions that enable *clean* coding.
 
