@@ -73,3 +73,5 @@ For a similar framework in Python that interfaces PyTorch (and actually predates
 ## Author
 
 This package was written by [Philipp Witte](https://www.slim.eos.ubc.ca/philipp) from the Seismic Laboratory for Imaging and Modeling (SLIM) at the Georgia Institute of Technology.
+
+ - Contact Philipp at pwitte3@gatech.edu
