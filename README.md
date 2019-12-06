@@ -6,7 +6,7 @@ Features:
 
  - Compatibility with the Julia [Flux](https://github.com/FluxML/Flux.jl) deep learning library. Both Flux and JUDI are based on abstract high-level mathematical expressions that enable *clean* coding.
 
- - Blazingly fast seismic modeling routines using stencil-based finite-difference C code, which is automatically generated and optimized using [Devito](https://www.devitoproject.org/).
+ - Blazingly fast seismic modeling routines using stencil-based finite-difference C code, which is automatically generated and optimized by [Devito](https://www.devitoproject.org/).
 
  - Supported operators: forward/adjoint modeling, linearized Born scattering/RTM, forward/adjoint extended source modeling.
 
