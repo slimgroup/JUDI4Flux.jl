@@ -1,12 +1,12 @@
 ## JUDI4Flux: Seismic modeling for deep learning
 
-JUDI4Flux enables compositions of seismic modeling operators with (convolution) neural networks. JUDI4Flux is an extension of [JUDI](https://github.com/slimgroup/JUDI.jl), a framework for seismic modeling and inversion with automatic code generation and performance optimization based on [Devito](https://www.devitoproject.org/). JUDI4Flux integrates JUDI's linear and non-linear modeling operators into the [Flux](https://github.com/FluxML/Flux.jl) deep learning library, thus allowing the implementation of physics-driven neural networks. For backpropagation, JUDI4Flux calls JUDI's adjoint PDE solvers, thus making it possible to backpropagate effieciently through single or multiple PDE layers and scale to large problem sizes.
+JUDI4Flux enables compositions of seismic modeling operators with (convolutional) neural networks. JUDI4Flux is an extension of [JUDI](https://github.com/slimgroup/JUDI.jl), a framework for seismic modeling and inversion with automatic code generation and performance optimization based on [Devito](https://www.devitoproject.org/). JUDI4Flux integrates JUDI's linear and non-linear modeling operators into the [Flux](https://github.com/FluxML/Flux.jl) deep learning library, thus allowing the implementation of *physics-driven* neural networks. For backpropagation, JUDI4Flux calls JUDI's adjoint PDE solvers, thus making it possible to backpropagate effieciently through single or multiple PDE layers and scale to large problem sizes.
 
 Features:
 
- - Compatibility with the Julia [Flux](https://github.com/FluxML/Flux.jl) deep learning library.
+ - Compatibility with the Julia [Flux](https://github.com/FluxML/Flux.jl) deep learning library. Both Flux and JUDI are based on abstract high-level mathematical expressions that enable *clean* coding.
 
- - Seismic modeling using stencil-based finite-difference C code, which is automatically generated and optimized using [Devito](https://www.devitoproject.org/).
+ - Blazingly fast seismic modeling routines using stencil-based finite-difference C code, which is automatically generated and optimized using [Devito](https://www.devitoproject.org/).
 
  - Supported operators: forward/adjoint modeling, linearized Born scattering/RTM, forward/adjoint extended source modeling.
 
@@ -37,7 +37,7 @@ gs = Tracker.gradient(() -> loss(x, y), params(W, b, x))
 gs[x]   # evalute gradient of x
 ```
 
-Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate a nonlinear forward modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module:
+Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate a nonlinear forward modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module (full example here):
 
 
 ```{#example_nonlin}
@@ -61,7 +61,7 @@ gs[m]   # evalute gradient w.r.t. m
 
 ## Example applications
 
-A possible application of JUDI4Flux is the implementation of loop-unrolled LS-RTM algorithms - physics-augmented convolutional neural networks for seismic imaging. By training a loop unrolled LS-RTM network using pairs of true images and observed data, this makes it possible to obtain high-fidelity images from noisy simultaneous shot records. The below figure compares images obtained from RTM, standard LS-RTM with gradient descent and loop unrolled LS-RTM. Each image is obtained from a single simultaneous shot record only. (*A preprint describing the approach will be added to arXiv shortly.*)
+A possible application of JUDI4Flux is the implementation of loop-unrolled LS-RTM algorithms - physics-augmented convolutional neural networks for seismic imaging. By training a loop unrolled LS-RTM network using pairs of true images and observed data, this makes it possible to obtain high-fidelity images from noisy simultaneous shot records. The below figure compares RTM, standard LS-RTM with gradient descent and loop unrolled LS-RTM. Each image is obtained from a single simultaneous shot record only. (*Full preprint to be added to arXiv shortly.*)
 
 ![](docs/loop_unrolling.png)
 
