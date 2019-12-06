@@ -61,11 +61,15 @@ gs[m]   # evalute gradient w.r.t. m
 
 ## Example applications
 
-A possible application of JUDI4Flux is the implementation of loop-unrolled LS-RTM algorithms - physics-augmented convolutional neural networks for seismic imaging. By training a loop unrolled LS-RTM network using pairs of true images and observed data, this makes it possible to obtain high-fidelity images from noisy simultaneous shot records. (*A preprint describing the approach will be added to arXiv shortly.*)
+A possible application of JUDI4Flux is the implementation of loop-unrolled LS-RTM algorithms - physics-augmented convolutional neural networks for seismic imaging. By training a loop unrolled LS-RTM network using pairs of true images and observed data, this makes it possible to obtain high-fidelity images from noisy simultaneous shot records. The below figure compares images obtained from RTM, standard LS-RTM with gradient descent and loop unrolled LS-RTM. Each image is obtained from a single simultaneous shot record only. (*A preprint describing the approach will be added to arXiv shortly.*)
 
-![](docs/image1.png){width=70%}
+![](docs/loop_unrolling.png)
 
 
 ## Related work
 
 For a similar framework in Python that interfaces PyTorch (and actually predates `JUDI4Flux`), please check out Alan Richardson very cool package [deepwave](https://github.com/ar4/deepwave). Similar to `JUDI4Flux`, this package integrates seismic modeling and linearized modeling functions based on finite-difference stencil code into a deep learning framework. Alan's package supports seismic modeling on both CPUs and GPUs.
+
+## Author
+
+This package was written by [Philipp Witte](https://www.slim.eos.ubc.ca/philipp) from the Seismic Laboratory for Imaging and Modeling (SLIM) at the Georgia Institute of Technology.
