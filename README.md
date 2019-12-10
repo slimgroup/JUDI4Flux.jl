@@ -1,6 +1,6 @@
 ## JUDI4Flux: Seismic modeling for deep learning
 
-JUDI4Flux enables compositions of seismic modeling operators with (convolutional) neural networks. JUDI4Flux is an extension of [JUDI](https://github.com/slimgroup/JUDI.jl), a framework for seismic modeling and inversion with automatic code generation and performance optimization based on [Devito](https://www.devitoproject.org/). JUDI4Flux integrates JUDI's linear and non-linear modeling operators into the [Flux](https://github.com/FluxML/Flux.jl) deep learning library, thus allowing the implementation of *physics-driven* neural networks. For backpropagation, JUDI4Flux calls JUDI's adjoint PDE solvers, thus making it possible to backpropagate effieciently through single or multiple PDE layers and scale to large problem sizes.
+JUDI4Flux enables compositions of seismic modeling operators with (convolutional) neural networks. JUDI4Flux is an extension of [JUDI](https://github.com/slimgroup/JUDI.jl), a framework for seismic modeling and inversion with automatic code generation and performance optimization based on [Devito](https://www.devitoproject.org/). JUDI4Flux integrates JUDI's linear and non-linear modeling operators into the [Flux](https://github.com/FluxML/Flux.jl) deep learning library, thus allowing the implementation of *physics-driven* neural networks. For backpropagation, JUDI4Flux calls JUDI's adjoint PDE solvers, thus making it possible to backpropagate efficiently through single or multiple PDE layers and scale to large problem sizes.
 
 **Features:**
 
@@ -68,7 +68,10 @@ A possible application of JUDI4Flux is the implementation of loop-unrolled LS-RT
 
 ## Related work
 
-For a similar framework in Python that interfaces PyTorch (and actually predates `JUDI4Flux`), please check out Alan Richardson very cool package [deepwave](https://github.com/ar4/deepwave). Similar to `JUDI4Flux`, this package integrates seismic modeling and linearized modeling functions based on finite-difference stencil code into a deep learning framework. Alan's package supports seismic modeling on both CPUs and GPUs.
+ - For a similar framework in Python that interfaces PyTorch (and actually predates `JUDI4Flux`), please check out Alan Richardson very cool package [deepwave](https://github.com/ar4/deepwave). Similar to `JUDI4Flux`, this package integrates seismic modeling and linearized modeling functions based on finite-difference stencil code into a deep learning framework. Alan's package supports seismic modeling on both CPUs and GPUs.
+
+- [DiffEqFlux.jl](https://github.com/JuliaDiffEq/DiffEqFlux.jl) is a Julia package that integrates the  [DifferentialEquations.jl](https://github.com/JuliaDiffEq/DiffEqDocs.jl/blob/master/docs/src/index.md) package for more generic ODEs/PDEs into Flux.
+
 
 ## Author
 
