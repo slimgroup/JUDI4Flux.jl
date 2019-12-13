@@ -1,14 +1,12 @@
 module JUDI4Flux
     using JUDI.TimeModeling: judiJacobian
-    using JUDI.TimeModeling: judiPDEextended
-    using JUDI.TimeModeling: judiWeights
     using JUDI.TimeModeling: judiPDEfull
     using JUDI.TimeModeling: judiVector
     using Tracker, Flux, JOLI
     import Base.*
     import Tracker.@grad
     using Flux: @treelike
-    export ForwardModel, ExtendedQForward, ExtendedQAdjoint
+    export ForwardModel
 
     function my_norm(x; dt=1, p=2)
         x = dt * sum(abs.(vec(x)).^p)
@@ -68,132 +66,6 @@ module JUDI4Flux
     @grad function (FM::ForwardModel)(m::TrackedArray)
         J = judiJacobian(FM.F, FM.q)
         return FM(Tracker.data(m)), Δ -> (reshape(adjoint(J) * vec(Δ), J.model.n[1], J.model.n[2], 1, 1), nothing)
-    end
-
-####################################################################################################
-
-    # Extended source forward modeling
-    struct ExtendedQForward{T1}
-        F::T1   # forward modeling operator
-    end
-
-    @treelike ExtendedQForward
-
-    # Extended source forward modeling: forward mode
-    function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
-        Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:, :, 1,1]
-        out = Flocal*vec(w)
-        nt = Flocal.recGeometry.nt[1]
-        nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
-    end
-
-    function show(io::IO, EQF::ExtendedQForward)
-        print(io, "ExtendedQForward(", size(EQF.F.n), ", ", size(EQF.F.m))
-        print(io, ")")
-    end
-
-    # Extended source forward modeling: backward mode
-    (EQF::ExtendedQForward)(w::TrackedArray, m::TrackedArray) = Tracker.track(EQF, w, m)
-    (EQF::ExtendedQForward)(w::TrackedArray, m::AbstractArray)= Tracker.track(EQF, w, m)
-    (EQF::ExtendedQForward)(w::AbstractArray, m::TrackedArray) =  Tracker.track(EQF, w, m)
-
-
-    function grad_w(EQF::ExtendedQForward, m, Δd)
-        Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:,:,1,1]
-        Δw = adjoint(Flocal) * vec(Δd)
-        return reshape(Δw, EQF.F.model.n[1], EQF.F.model.n[2], 1, EQF.F.info.nsrc)
-    end
-
-    function grad_m(EQF::ExtendedQForward, w, m, Δd)
-        Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:,:,1,1]
-        J = judiJacobian(Flocal, judiWeights(convert_to_cell(w)))
-        Δm = adjoint(J) * vec(Δd)
-        return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
-
-    end
-
-    @grad function (EQF::ExtendedQForward)(w::TrackedArray, m::TrackedArray)
-        m =  Tracker.data(m)
-        w = Tracker.data(w)
-        return EQF(w, m), Δ -> (grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ), nothing)
-    end
-
-    @grad function (EQF::ExtendedQForward)(w::TrackedArray, m::AbstractArray)
-        w = Tracker.data(w)
-        return EQF(w, m), Δ -> (grad_w(EQF, m, Δ), nothing, nothing)
-    end
-
-    @grad function (EQF::ExtendedQForward)(w::AbstractArray, m::TrackedArray)
-        m = Tracker.data(m)
-        return EQF(w, m), Δ -> (nothing, grad_m(EQF, w, m, Δ), nothing)
-    end
-
-
-####################################################################################################
-
-
-    # Extended source adjoint modeling
-    struct ExtendedQAdjoint{T1}
-        F::T1   # adjoint modeling operator
-    end
-
-    @treelike ExtendedQAdjoint
-
-    # Extended source adjoint modeling: forward mode
-    function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
-        Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
-        out = adjoint(Flocal)*vec(d)
-        out = reshape(out, Flocal.model.n[1], Flocal.model.n[2], 1, Flocal.info.nsrc)
-        return out
-    end
-
-    function show(io::IO, EQT::ExtendedQAdjoint)
-        print(io, "ExtendedQAdjoint(", size(EQT.F.m), ", ", size(EQT.F.n))
-        print(io, ")")
-    end
-
-    # Extended source adjoint modeling: backward mode
-    (EQT::ExtendedQAdjoint)(d::TrackedArray, m::TrackedArray) = Tracker.track(EQT, d, m)
-    (EQT::ExtendedQAdjoint)(d::TrackedArray, m::AbstractArray)= Tracker.track(EQT, d, m)
-    (EQT::ExtendedQAdjoint)(d::AbstractArray, m::TrackedArray) =  Tracker.track(EQT, d, m)
-
-    function grad_d(EQT::ExtendedQAdjoint, m, Δw)
-        Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
-        Δd = Flocal * vec(Δw)
-        nt = Flocal.recGeometry.nt[1]
-        nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(Δd, nt, nrec, 1, EQT.F.info.nsrc)
-    end
-
-    function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
-        Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
-        J = judiJacobian(Flocal, judiWeights(convert_to_cell(Δw)))
-        Δm = adjoint(J) * vec(d)
-        return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
-    end
-
-    @grad function (EQT::ExtendedQAdjoint)(d::TrackedArray, m::TrackedArray)
-        d = Tracker.data(d)
-        m = Tracker.data(m)
-        return EQT(d, m), Δ -> (grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ), nothing)
-    end
-
-    @grad function (EQT::ExtendedQAdjoint)(d::TrackedArray, m::AbstractArray)
-        d = Tracker.data(d)
-        return EQT(d, m), Δ -> (grad_d(EQT, m, Δ), nothing, nothing)
-    end
-
-    @grad function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::TrackedArray)
-        m = Tracker.data(m)
-        return EQT(d, m), Δ -> (nothing, grad_m(EQT, d, m, Δ), nothing)
-
     end
 
 end

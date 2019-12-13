@@ -8,7 +8,7 @@ JUDI4Flux enables compositions of seismic modeling operators with (convolutional
 
  - Blazingly fast seismic modeling routines using stencil-based finite-difference C code, which is automatically generated and optimized by [Devito](https://www.devitoproject.org/).
 
- - Supported operators: forward/adjoint modeling, linearized Born scattering/RTM, forward/adjoint extended source modeling.
+ - Supported operators: forward/adjoint modeling, linearized Born scattering/RTM
 
 
 ## Linear and nonlinear JUDI operators with Flux
