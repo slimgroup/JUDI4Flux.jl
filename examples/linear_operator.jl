@@ -86,3 +86,12 @@ x = zeros(Float32, info.n)
 loss(x, y) = Flux.mse(J*x, y)
 g = gradient(loss, x, y)[1]
 
+# Nonlinear modeling
+ℱ = ForwardModel(Pr*F*Ps', q)
+m = reshape(m, n[1], n[2], 1, 1)    # reshape to tensor: (nx, nz, num_channel, batchsize)
+
+x = reshape(deepcopy(model0.m), n[1], n[2], 1, 1)
+y = ℱ(x)
+
+loss(x, y) = Flux.mse(ℱ(x), y)
+g = gradient(loss, x, y)[1]
