@@ -11,6 +11,23 @@ JUDI4Flux enables compositions of seismic modeling operators with (convolutional
  - Supported operators: forward/adjoint modeling, linearized Born scattering/RTM
 
 
+## Installation
+
+
+User installation:
+
+```
+] add https://github.com/slimgroup/JUDI4Flux.jl
+```
+
+
+Developer installation:
+
+```
+] dev https://github.com/slimgroup/JUDI4Flux.jl
+```
+
+
 ## Linear and nonlinear JUDI operators with Flux
 
 JUDI4Flux enables compositions of neural network layers (e.g. convolutional or fully-connected layers) with operators for seismic modeling. Instead of having to re-implement seismic modeling operators with convolutions from machine learning libraries, this makes it possible to use existing modeling operators, namely JUDI operators for Born- and nonlinear modeling. Even more importantly, we can evaluate these operators during backpropagation by calling the corresponding adjoint operators, but fully integrate them into Flux's automatic differentiation (AD) module (Flux.Tracker).
