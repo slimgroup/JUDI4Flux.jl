@@ -32,7 +32,7 @@ Developer installation:
 
 JUDI4Flux enables compositions of neural network layers (e.g. convolutional or fully-connected layers) with operators for seismic modeling. Instead of having to re-implement seismic modeling operators with convolutions from machine learning libraries, this makes it possible to use existing modeling operators, namely JUDI operators for Born- and nonlinear modeling. Even more importantly, we can evaluate these operators during backpropagation by calling the corresponding adjoint operators, but fully integrate them into Flux's automatic differentiation (AD) module (Flux.Tracker).
 
-This allows combining JUDI operators with Flux misfit functions to compute gradients for least squares RTM (LS-RTM) or full waveform inversion (FWI) and combinations of modeling and neural network layers. For example, the following code show an example of combining the Born scattering operator with a dense neural network layer (check here for the full example):
+This allows combining JUDI operators with Flux misfit functions to compute gradients for least squares RTM (LS-RTM) or full waveform inversion (FWI) and combinations of modeling and neural network layers. For example, the following code show an example of combining the Born scattering operator with a dense neural network layer (check [here](https://github.com/slimgroup/JUDI4Flux.jl/blob/master/examples/example_born_fully_connected.jl) for the full example):
 
 ```{#example_lin}
 # Test demigration operator w/ Flux Dense Layer
@@ -50,11 +50,11 @@ predict(x) = W*(J*x) .+ b
 loss(x,y) = Flux.mse(predict(x), y)
 
 # Compute gradient w/ Flux
-gs = Tracker.gradient(() -> loss(x, y), params(W, b, x))
+gs = gradient(() -> loss(x, y), params(W, b, x))
 gs[x]   # evalute gradient of x
 ```
 
-Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate a nonlinear forward modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module (full example here):
+Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate a nonlinear forward modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module (full example [here](https://github.com/slimgroup/JUDI4Flux.jl/blob/master/examples/example_modeling_cnn.jl)):
 
 
 ```{#example_nonlin}
@@ -72,7 +72,7 @@ predict(x) = conv2(ℱ(conv1(x)))
 loss(x, y) = Flux.mse(predict(x), y)
 
 # Compute gradient w/ Flux
-gs = Tracker.gradient(() -> loss(x, y), params(m))
+gs = gradient(() -> loss(x, y), params(m))
 gs[m]   # evalute gradient w.r.t. m
 ```
 

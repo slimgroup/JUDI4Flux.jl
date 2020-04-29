@@ -53,42 +53,36 @@ A_inv = judiModeling(info, model; options=opt)
 Pw = judiLRWF(info, wavelet)
 F = Pr*A_inv*adjoint(Pw)
 
+# Extended source weight
+w = randn(Float32, model.n)
 
 #####################################################################################
+# Extended source forward
 
 # Build CNN
-n_in = 10
-n_out = 8
-batchsize = nsrc
-
-conv1 = Conv((3, 3), n_in => 1, stride=1, pad=1)
-conv2 = Conv((3, 3), 1 => n_out, stride=1, pad=1)
-
 G = ExtendedQForward(F)
-G_T = ExtendedQAdjoint(F)
 
-function network(x, m)
-    x = conv1(x)
-    x = G(x, m)
-    x = G_T(x, m)
-    x = conv2(x)
-    return x
-end
+w = reshape(w, n[1], n[2], 1, 1)
+m = reshape(m, n[1], n[2], 1, 1)
+y = randn(Float32, recGeometry.nt[1], nxrec, 1, 1)
 
-loss(x, m, y) = Flux.mse(network(x, m), y)
+loss(w, m, y) = Flux.mse(G(w, m), y)
 
+p =  params(w, m, y)
+gs = gradient(() -> loss(w, m, y), p)
 
-x = randn(Float32, n[1], n[2], n_in, batchsize)
-m = reshape(m, n[1], n[2], 1, 1)    #
-y = randn(Float32, n[1], n[2], n_out, batchsize)
+#####################################################################################
+# Extended source adjoint
 
-# Compute gradient of parameters
-p =  params(x, m, y, conv1, conv2)
-gs = gradient(() -> loss(x, m, y), p)
+G = ExtendedQAdjoint(F)
 
-# Access gradients
-Δx = gs[x]
-Δm = gs[m]
-Δy = gs[y]
-Δw1 = gs[conv1.weight]
-Δb1 = gs[conv1.bias]
+w = reshape(w, n[1], n[2], 1, 1)
+m = reshape(m, n[1], n[2], 1, 1)
+y = randn(Float32, recGeometry.nt[1], nxrec, 1, 1)
+
+loss(y, m, w) = Flux.mse(G(y, m), w)
+
+p =  params(y, m, w)
+gs = gradient(() -> loss(y, m, w), p)
+
+ 
