@@ -58,17 +58,25 @@ Using non-linear modeling operators and convolutional layers is possible as well
 
 
 ```{#example_nonlin}
-# Nonlinear JUDI modeling operator
+# Extended source modeling operator
 model = Model(n, d, o, m)
-F = judiModeling(info, model, rec_geometry, src_geometry)
+Pr = judiProjection(info, recGeometry)
+A_inv = judiModeling(info, model; options=opt)
+Pw = judiLRWF(info, wavelet)
 
 # Network layers
-ℱ = ExtendedQForward(F)
+ℱ = ExtendedQForward(Pr*A_inv*adjoint(Pw))
 conv1 = Conv((3, 3), 1=>1, pad=1, stride=1)
 conv2 = Conv((3, 3), 1=>1, pad=1, stride=1)
 
 # Network and loss
-predict(x, m) = conv2(ℱ(conv1(x), m))
+function predict(x, m)
+    x = conv1(x)
+    x = ℱ(x, m)    # m is the velocity model
+    x = conv2(x)
+    return x
+end
+
 loss(x, m, y) = Flux.mse(predict(x, m), y)
 
 # Compute gradient w/ Flux
