@@ -1,8 +1,8 @@
-# Example for basic 2D modeling:
-# The receiver positions and the source wavelets are the same for each of the four experiments.
-# Author: Philipp Witte, pwitte@eos.ubc.ca
-# Date: January 2017
+# Example for extended source modeling with Flux
+# Author: Philipp Witte, pwitte3@gatech.edu
+# Date: April 2020
 #
+
 
 using JUDI.TimeModeling, SegyIO, JOLI, Flux, JUDI4Flux
 
