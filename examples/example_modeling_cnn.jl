@@ -79,7 +79,6 @@ function network(x)
 end
 
 # Nonlinear modeling
-
 x = ones(Float32, n[1], n[2], n_in, batchsize)
 y = randn(Float32, recGeometry.nt[1], nxrec, n_out, batchsize)
 
