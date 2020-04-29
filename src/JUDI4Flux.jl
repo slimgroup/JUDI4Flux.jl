@@ -7,7 +7,7 @@ module JUDI4Flux
     using Zygote: @adjoint
     import Base.*
     
-    export ForwardModel, ExtendedQForward, ExtendedQAdjoint
+    export ExtendedQForward, ExtendedQAdjoint
 
     function my_norm(x; dt=1, p=2)
         x = dt * sum(abs.(vec(x)).^p)
@@ -30,42 +30,14 @@ module JUDI4Flux
 
 ####################################################################################################
 
-   # Layer for non-linear modeling
-   struct ForwardModel{T1, T2}
-       F::T1
-       q::T2
-   end
-
-   # Non-linear modeling: forward mode
-   function (FM::ForwardModel)(m::AbstractArray)
-
-       Flocal = deepcopy(FM.F)    # don't overwrite model of original operator
-       Flocal.model.m = m[:,:,1,1]
-       if typeof(FM.q) == judiVector{Float32} || typeof(FM.q) == judiWeights{Float32}
-           out = Flocal*FM.q
-       else
-           out = Flocal*vec(FM.q)
-       end
-       nt = Flocal.recGeometry.nt[1]
-       nrec = length(Flocal.recGeometry.xloc[1])
-       return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
-   end
-
-   @adjoint function (FM::ForwardModel)(m::AbstractArray)
-        J = judiJacobian(FM.F, FM.q)
-        return FM(m), Δ -> (nothing, reshape(adjoint(J) * vec(Δ), J.model.n[1], J.model.n[2], 1, 1))
-    end
-
-
-####################################################################################################
-
-    # Extende source modeling
 
     # Extended source forward modeling
     struct ExtendedQForward{T1}
         F::T1   # forward modeling operator
+        m_grad::Bool
     end
 
+    ExtendedQForward(F; m_grad=true) = ExtendedQForward(F, m_grad)
 
     # Extended source forward modeling: forward mode
     function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
@@ -78,7 +50,6 @@ module JUDI4Flux
     end
 
     function grad_w(EQF::ExtendedQForward, m, Δd)
-        print("Compute w grad")
         Flocal = deepcopy(EQF.F)
         Flocal.model.m = m[:,:,1,1]
         Δw = adjoint(Flocal) * vec(Δd)
@@ -86,7 +57,6 @@ module JUDI4Flux
     end
 
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
-        print("Compute m grad")
         Flocal = deepcopy(EQF.F)
         Flocal.model.m = m[:,:,1,1]
         J = judiJacobian(Flocal, w[:,:,1,1])
@@ -95,20 +65,23 @@ module JUDI4Flux
     end
 
     @adjoint function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
-        print("typeof(w)", typeof(w))
-        print("typeof(m)", typeof(m))
-        return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ))
+        if EQF.m_grad
+            return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ))
+        else
+            return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), nothing)
+        end
     end
 
 
 ####################################################################################################
 
-    # Adjoint extende source modeling
-
     # Extended source adjoint modeling
     struct ExtendedQAdjoint{T1}
         F::T1   # adjoint modeling operator
+        m_grad::Bool
     end
+
+    ExtendedQAdjoint(F; m_grad=true) = ExtendedQAdjoint(F, m_grad)
 
     # Extended source adjoint modeling: forward mode
     function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
@@ -137,7 +110,10 @@ module JUDI4Flux
     end
 
     @adjoint function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
-        return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ))
+        if EQT.m_grad
+            return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ))
+        else
+            return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), nothing)
+        end
     end
-
 end
