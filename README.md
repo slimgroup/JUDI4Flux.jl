@@ -54,7 +54,7 @@ gs = gradient(() -> loss(x, y), params(W, b, x))
 gs[x]   # evalute gradient of x
 ```
 
-Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate a nonlinear forward modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module (full example [here](https://github.com/slimgroup/JUDI4Flux.jl/blob/master/examples/example_modeling_cnn.jl)):
+Using non-linear modeling operators and convolutional layers is possible as well! For example, the following code shows how to integrate an extended source modeling JUDI operator into a shallow CNN, consisting of two convolutional layers, with a nonlinear forward modeling layer ℱ in-between them. As before, we can define a loss function using Flux utilities and compute derivatives with respect to various parameters, such as the squared slowness vector `m`. Once again, gradients of layers containing JUDI operators are computed using the corresponding adjoints or JUDI gradients, instead of Flux's Tracker module (full example [here](https://github.com/slimgroup/JUDI4Flux.jl/blob/master/examples/example_extended_source_cnn.jl)):
 
 
 ```{#example_nonlin}
@@ -63,17 +63,21 @@ model = Model(n, d, o, m)
 F = judiModeling(info, model, rec_geometry, src_geometry)
 
 # Network layers
-ℱ = ForwardModel(F, q)
+ℱ = ExtendedQForward(F)
 conv1 = Conv((3, 3), 1=>1, pad=1, stride=1)
 conv2 = Conv((3, 3), 1=>1, pad=1, stride=1)
 
 # Network and loss
-predict(x) = conv2(ℱ(conv1(x)))
-loss(x, y) = Flux.mse(predict(x), y)
+predict(x, m) = conv2(ℱ(conv1(x), m))
+loss(x, m, y) = Flux.mse(predict(x, m), y)
 
 # Compute gradient w/ Flux
-gs = gradient(() -> loss(x, y), params(m))
+p = params(x, m, conv1, conv2)
+gs = gradient(() -> loss(x, m, y), p)
+
 gs[m]   # evalute gradient w.r.t. m
+gs[conv1.weight]   # evalute gradient w.r.t. the convolution kernel
+
 ```
 
 ## Example applications
