@@ -19,13 +19,13 @@ v[:, Int(round(end/2)):end] .= 4f0
 
 # Slowness squared [s^2/km^2]
 m = (1f0 ./ v).^2
+m0 = imfilter(m, Float32.(Kernel.gaussian(10)))
 
 # Setup info and model structure
 nsrc = 4	# number of sources
 model = Model(n, d, o, m)
+model0 = Model(n, d, o, m0)
 m = reshape(m,n[1],n[2],1,1)
-
-model = Model(n, d, o, m0)
 m0 = reshape(m0,n[1],n[2],1,1)
 
 # Set up receiver geometry
@@ -55,8 +55,10 @@ opt = Options(return_array=true, sum_padding=true)
 # Linear operators
 Pr = judiProjection(info, recGeometry)
 A_inv = judiModeling(info, model; options=opt)
+A_inv0 = judiModeling(info, model0; options=opt)
 Pw = judiLRWF(info, wavelet)
 F = Pr*A_inv*adjoint(Pw)
+F0 = Pr*A_inv0*adjoint(Pw)
 
 
 function GenSimSourceMulti(xsrc_index, zsrc_index, nsrc, n)
@@ -94,23 +96,22 @@ else
     zsrc_index = Int.(round.((range(10,stop=10,length=nsrc))))
 end
 
-q1 = GenSimSourceMulti(xsrc_index, zsrc_index, nsrc, model.n);
-q = deepcopy(q1)
+q = GenSimSourceMulti(xsrc_index, zsrc_index, nsrc, model.n);
+q0 = deepcopy(q)
 for i = 1:nsrc
-    q[:,:,1,i] = imfilter(q1[:,:,1,i], Float32.(Kernel.gaussian(10)))
+    q0[:,:,1,i] = imfilter(q[:,:,1,i], Float32.(Kernel.gaussian(10)))
 end
 
-d_obs = G(q1,m)
+d_obs = G(q,m)
 
-J = judiJacobian(F,q)
-gradient_m = adjoint(J)*vec(G(q,m)-d_obs)
+J = judiJacobian(F0,q0)
+gradient_m = adjoint(J)*vec(G(q0,m0)-d_obs)
 
-Loss(m)=misfit_objective(d_obs, q, m, G)
-p = params(m)
-gs_inv = gradient(() -> Loss(m),p)
+p = params(m0)
+gs_inv = gradient(() -> misfit_objective(d_obs, q0, m0, G),p)
 
 g1 = vec(gradient_m)
-g2 = vec(gs_inv[m])
+g2 = vec(gs_inv[m0])
 
-@test isapprox(norm(g1-g2) / norm(g1), 0f0; atol=2f-1)
-@test isapprox(dot(g1,g2)/norm(g1)/norm(g2),1f0;rtol=2f-1)
+@test isapprox(norm(g1-g2) / norm(g1), 0f0; atol=1f-1)
+@test isapprox(dot(g1,g2)/norm(g1)/norm(g2),1f0;rtol=1f-1)
