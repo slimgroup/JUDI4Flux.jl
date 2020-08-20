@@ -59,7 +59,7 @@ module JUDI4Flux
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
         Flocal = deepcopy(EQF.F)
         Flocal.model.m = m[:,:,1,1]
-        J = judiJacobian(Flocal, w[:,:,1,1])
+        J = judiJacobian(Flocal, w[:,:,1,Flocal.info.nsrc])
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
     end
@@ -104,7 +104,7 @@ module JUDI4Flux
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
         Flocal = deepcopy(EQT.F)
         Flocal.model.m = m[:,:,1,1]
-        J = judiJacobian(Flocal, Δw[:,:,1,1])
+        J = judiJacobian(Flocal, Δw[:,:,1,Flocal.info.nsrc])
         Δm = adjoint(J) * vec(d)
         return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
     end
