@@ -25,6 +25,9 @@ module JUDI4Flux
 
 ####################################################################################################
 
+    # Nonlinear Forward modelling
+    @adjoint *(F::T1, x::AbstractVecOrMat) = *(F, x), Δ -> (nothing, transpose(judiJacobian(F, x)) * Δ, transpose(F) * Δ)
+
     # Linearized Born scattering
     @adjoint *(J::judiJacobian, x::AbstractVecOrMat) = *(J, x), Δ -> (nothing, transpose(J) * Δ)
 
