@@ -34,10 +34,11 @@ module JUDI4Flux
     # Extended source forward modeling
     struct ExtendedQForward{T1}
         F::T1   # forward modeling operator
+        w_grad::Bool
         m_grad::Bool
     end
 
-    ExtendedQForward(F; m_grad=true) = ExtendedQForward(F, m_grad)
+    ExtendedQForward(F; w_grad=true, m_grad=true) = ExtendedQForward(F, w_grad, m_grad)
 
     # Extended source forward modeling: forward mode
     function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
@@ -66,9 +67,17 @@ module JUDI4Flux
 
     @adjoint function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
         if EQF.m_grad
-            return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ))
+            if EQF.w_grad
+                return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), grad_m(EQF, w, m, Δ))
+            else
+                return EQF(w, m), Δ -> (nothing, nothing, grad_m(EQF, w, m, Δ))
+            end
         else
-            return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), nothing)
+            if EQF.w_grad
+                return EQF(w, m), Δ -> (nothing, grad_w(EQF, m, Δ), nothing)
+            else
+                return EQF(w, m), Δ -> (nothing, nothing, nothing)
+            end
         end
     end
 
@@ -78,10 +87,11 @@ module JUDI4Flux
     # Extended source adjoint modeling
     struct ExtendedQAdjoint{T1}
         F::T1   # adjoint modeling operator
+        d_grad::Bool
         m_grad::Bool
     end
 
-    ExtendedQAdjoint(F; m_grad=true) = ExtendedQAdjoint(F, m_grad)
+    ExtendedQAdjoint(F; d_grad=true, m_grad=true) = ExtendedQAdjoint(F, d_grad, m_grad)
 
     # Extended source adjoint modeling: forward mode
     function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
@@ -111,9 +121,17 @@ module JUDI4Flux
 
     @adjoint function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
         if EQT.m_grad
-            return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ))
+            if EQT.d_grad
+                return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), grad_m(EQT, d, m, Δ))
+            else
+                return EQT(d, m), Δ -> (nothing, nothing, grad_m(EQT, d, m, Δ))
+            end
         else
-            return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), nothing)
+            if EQT.d_grad
+                return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), nothing)
+            else
+                return EQT(d, m), Δ -> (nothing, nothing, nothing)
+            end
         end
     end
 end
