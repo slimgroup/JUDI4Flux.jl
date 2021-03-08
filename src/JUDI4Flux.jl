@@ -124,19 +124,7 @@ module JUDI4Flux
     end
 
     # Fixed source forward modeling: forward mode
-    function (FWD::Forward)(m::AbstractArray)
-        Flocal = deepcopy(FWD.F)
-        Flocal.model.m .= m[:, :, 1,1]
-        out = Flocal * FWD.q
-        nt = Flocal.recGeometry.nt[1]
-        nrec = length(Flocal.recGeometry.xloc[1])
-        return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
-    end
-
-    @adjoint function (FWD::Forward)(m::AbstractArray)
-        Flocal = deepcopy(FWD.F)
-        Flocal.model.m .= m[:,:,1,1]
-        J = judiJacobian(Flocal,FWD.q)
-        return FWD(m), Δ -> (nothing, reshape(transpose(J) * vec(Δ), size(m)))
-    end
+    (FWD::Forward)(m::AbstractArray) = FWD.F(;m=m)* FWD.q
+    @adjoint (FWD::Forward)(m::AbstractArray) = FWD(m), Δ -> (nothing, reshape(transpose(judiJacobian(FWD.F(;m=m), FWD.q)) * vec(Δ), size(m)))
+    @adjoint *(F::judiPDEfull, x::judiVector) = *(F, x), Δ -> (nothing, transpose(F) * vec(Δ))
 end
