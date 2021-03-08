@@ -3,6 +3,7 @@ module JUDI4Flux
     using JUDI.TimeModeling: judiJacobian
     using JUDI.TimeModeling: judiPDEfull
     using JUDI.TimeModeling: judiVector
+    using JUDI.TimeModeling: judiModeling
     using Zygote, Flux, JOLI
     using Zygote: @adjoint
     import Base.*
@@ -126,5 +127,5 @@ module JUDI4Flux
     # Fixed source forward modeling: forward mode
     (FWD::Forward)(m::AbstractArray) = FWD.F(;m=m)* FWD.q
     @adjoint (FWD::Forward)(m::AbstractArray) = FWD(m), Δ -> (nothing, reshape(transpose(judiJacobian(FWD.F(;m=m), FWD.q)) * vec(Δ), size(m)))
-    @adjoint *(F::judiPDEfull, x::judiVector) = *(F, x), Δ -> (nothing, transpose(F) * vec(Δ))
+    @adjoint *(F::judiModeling, x::judiVector) = *(F, x), Δ -> (nothing, transpose(F) * vec(Δ))
 end
