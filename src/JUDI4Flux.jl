@@ -7,7 +7,7 @@ module JUDI4Flux
     using Zygote: @adjoint
     import Base.*
     
-    export ExtendedQForward, ExtendedQAdjoint
+    export ExtendedQForward, ExtendedQAdjoint, Forward
 
     function my_norm(x; dt=1, p=2)
         x = dt * sum(abs.(vec(x)).^p)
