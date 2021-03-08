@@ -134,8 +134,9 @@ module JUDI4Flux
     end
 
     @adjoint function (FWD::Forward)(m::AbstractArray)
-        J = judiJacobian(FWD.F,FWD.q)
-        return FWD(m), Δ -> (nothing, transpose(J) * Δ)
+        Flocal = deepcopy(FWD.F)
+        Flocal.model.m .= m[:,:,1,1]
+        J = judiJacobian(Flocal,FWD.q)
+        return FWD(m), Δ -> (nothing, reshape(transpose(J) * vec(Δ), size(m)))
     end
-
 end
