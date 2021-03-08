@@ -42,7 +42,7 @@ module JUDI4Flux
     # Extended source forward modeling: forward mode
     function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m.data = m[:, :, 1,1]
+        Flocal.model.m .= m[:, :, 1,1]
         out = Flocal * vec(w)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
@@ -51,14 +51,14 @@ module JUDI4Flux
 
     function grad_w(EQF::ExtendedQForward, m, Δd)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m.data = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         Δw = adjoint(Flocal) * vec(Δd)
         return reshape(Δw, EQF.F.model.n[1], EQF.F.model.n[2], 1, EQF.F.info.nsrc)
     end
 
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m.data = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         J = judiJacobian(Flocal, w[:,:,1,:])
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
@@ -86,7 +86,7 @@ module JUDI4Flux
     # Extended source adjoint modeling: forward mode
     function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m.data = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         out = adjoint(Flocal)*vec(d)
         out = reshape(out, Flocal.model.n[1], Flocal.model.n[2], 1, Flocal.info.nsrc)
         return out
@@ -94,7 +94,7 @@ module JUDI4Flux
 
     function grad_d(EQT::ExtendedQAdjoint, m, Δw)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m.data = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         Δd = Flocal * vec(Δw)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
@@ -103,7 +103,7 @@ module JUDI4Flux
 
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m.data = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         J = judiJacobian(Flocal, Δw[:,:,1,:])
         Δm = adjoint(J) * vec(d)
         return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
