@@ -120,7 +120,7 @@ module JUDI4Flux
     # Fixed source forward modeling
     struct Forward{T1}
         F::T1   # forward modeling operator
-        q::AbstractArray
+        q::judiVector
     end
 
     # Fixed source forward modeling: forward mode
