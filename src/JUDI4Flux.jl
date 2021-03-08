@@ -127,7 +127,7 @@ module JUDI4Flux
     function (FWD::Forward)(m::AbstractArray)
         Flocal = deepcopy(FWD.F)
         Flocal.model.m .= m[:, :, 1,1]
-        out = Flocal * Forward.q
+        out = Flocal * FWD.q
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
         return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
