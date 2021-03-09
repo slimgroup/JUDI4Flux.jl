@@ -1,7 +1,7 @@
 name = "JUDI4Flux"
 uuid = "64d089a9-642e-40bf-b992-0fb13636391a"
-authors = ["Henryk Modzelewski <henryk_modzelewski@mac.com>"]
-version = "0.1.1"
+authors = ["Ziyi (Francis) Yin<ziyi.yin@gatech.edu>", "Henryk Modzelewski <henryk_modzelewski@mac.com>"]
+version = "0.2.0"
 
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
@@ -11,4 +11,4 @@ SegyIO = "157a0f19-4d44-4de5-a0d0-07e2f0ac4dfa"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-julia = ">= 0.7"
+julia = ">= 1.3"

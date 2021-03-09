@@ -1,13 +1,11 @@
 module JUDI4Flux
 
-    using JUDI.TimeModeling: judiJacobian
-    using JUDI.TimeModeling: judiPDEfull
-    using JUDI.TimeModeling: judiVector
+    using JUDI.TimeModeling: judiJacobian, judiPDEfull, judiVector, judiModeling
     using Zygote, Flux, JOLI
     using Zygote: @adjoint
     import Base.*
     
-    export ExtendedQForward, ExtendedQAdjoint
+    export ExtendedQForward, ExtendedQAdjoint, Forward
 
     function my_norm(x; dt=1, p=2)
         x = dt * sum(abs.(vec(x)).^p)
@@ -42,8 +40,8 @@ module JUDI4Flux
     # Extended source forward modeling: forward mode
     function (EQF::ExtendedQForward)(w::AbstractArray, m::AbstractArray)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:, :, 1,1]
-        out = Flocal*vec(w)
+        Flocal.model.m .= m[:, :, 1,1]
+        out = Flocal * vec(w)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
         return reshape(out, nt, nrec, 1, Flocal.info.nsrc)
@@ -51,14 +49,14 @@ module JUDI4Flux
 
     function grad_w(EQF::ExtendedQForward, m, Δd)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         Δw = adjoint(Flocal) * vec(Δd)
         return reshape(Δw, EQF.F.model.n[1], EQF.F.model.n[2], 1, EQF.F.info.nsrc)
     end
 
     function grad_m(EQF::ExtendedQForward, w, m, Δd)
         Flocal = deepcopy(EQF.F)
-        Flocal.model.m = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         J = judiJacobian(Flocal, w[:,:,1,:])
         Δm = adjoint(J) * vec(Δd)
         return reshape(Δm, EQF.F.model.n[1], EQF.F.model.n[2], 1, 1)
@@ -86,7 +84,7 @@ module JUDI4Flux
     # Extended source adjoint modeling: forward mode
     function (EQT::ExtendedQAdjoint)(d::AbstractArray, m::AbstractArray)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         out = adjoint(Flocal)*vec(d)
         out = reshape(out, Flocal.model.n[1], Flocal.model.n[2], 1, Flocal.info.nsrc)
         return out
@@ -94,7 +92,7 @@ module JUDI4Flux
 
     function grad_d(EQT::ExtendedQAdjoint, m, Δw)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         Δd = Flocal * vec(Δw)
         nt = Flocal.recGeometry.nt[1]
         nrec = length(Flocal.recGeometry.xloc[1])
@@ -103,7 +101,7 @@ module JUDI4Flux
 
     function grad_m(EQT::ExtendedQAdjoint, d, m, Δw)
         Flocal = deepcopy(EQT.F)
-        Flocal.model.m = m[:,:,1,1]
+        Flocal.model.m .= m[:,:,1,1]
         J = judiJacobian(Flocal, Δw[:,:,1,:])
         Δm = adjoint(J) * vec(d)
         return reshape(Δm, EQT.F.model.n[1], EQT.F.model.n[2], 1, 1)
@@ -116,4 +114,15 @@ module JUDI4Flux
             return EQT(d, m), Δ -> (nothing, grad_d(EQT, m, Δ), nothing)
         end
     end
+
+    # Fixed source forward modeling
+    struct Forward{T1}
+        F::T1   # forward modeling operator
+        q::judiVector
+    end
+
+    # Fixed source forward modeling: forward mode
+    (FWD::Forward)(m::AbstractArray) = FWD.F(;m=m)* FWD.q
+    @adjoint (FWD::Forward)(m::AbstractArray) = FWD(m), Δ -> (nothing, reshape(transpose(judiJacobian(FWD.F(;m=m), FWD.q)) * vec(Δ), size(m)))
+    @adjoint *(F::judiModeling, x::judiVector) = *(F, x), Δ -> (nothing, transpose(F) * vec(Δ))
 end
