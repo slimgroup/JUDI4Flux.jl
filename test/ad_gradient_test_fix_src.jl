@@ -90,11 +90,10 @@ J = judiJacobian(F0,q)
 
 gradient_m = adjoint(J)*vec(G(m0)-d_obs)
 
-p = params(m0)
-gs_inv = gradient(() -> misfit_objective(d_obs, m0, G),p)
+gs_inv = gradient(x -> misfit_objective(d_obs, x, G), m0)
 
 g1 = vec(gradient_m)
-g2 = vec(gs_inv[m0])
+g2 = vec(gs_inv[1])
 
 @test isapprox(norm(g1-g2) / norm(g1), 0f0; atol=1f-1)
 @test isapprox(dot(g1,g2)/norm(g1)/norm(g2),1f0;rtol=1f-1)
