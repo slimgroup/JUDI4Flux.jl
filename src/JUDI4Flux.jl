@@ -1,6 +1,6 @@
 module JUDI4Flux
 
-    using JUDI.TimeModeling: judiJacobian, judiPDEfull, judiVector, judiModeling
+    using JUDI: judiJacobian, judiPDEfull, judiVector, judiModeling
     using Zygote, Flux, JOLI
     using Zygote: @adjoint
     import Base.*

@@ -3,7 +3,7 @@
 # Date: Mar 2021
 #
 using JUDI4Flux
-using JUDI.TimeModeling, SegyIO, JOLI, Flux
+using JUDI, SegyIO, JOLI, Flux
 using Test, ImageFiltering, LinearAlgebra, Random
 
 Random.seed!(11)
