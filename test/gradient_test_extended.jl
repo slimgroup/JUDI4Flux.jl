@@ -3,7 +3,7 @@
 # Date: April 2020
 #
 
-using JUDI, SegyIO, JOLI, Flux, JUDI4Flux
+using JUDI, Flux, JUDI4Flux
 using Test, ImageFiltering, LinearAlgebra, Random
 
 Random.seed!(11)
@@ -59,9 +59,7 @@ F = Pr*A_inv*adjoint(Pw)
 
 #####################################################################################
 
-G = ExtendedQForward(F)
-
-misfit(x, m, y) = Flux.mse(G(x, m), y)
+misfit(x, m, y) = Flux.mse(F(m, x), y)
 
 function loss(x, m, y)
     f = misfit(x, m, y)

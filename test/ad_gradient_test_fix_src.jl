@@ -2,8 +2,7 @@
 # Author: Ziyi Yin, ziyi.yin@gatech.edu
 # Date: Mar 2021
 #
-using JUDI4Flux
-using JUDI, SegyIO, JOLI, Flux
+using JUDI4Flux, JUDI, Flux
 using Test, ImageFiltering, LinearAlgebra, Random
 
 Random.seed!(11)
@@ -70,12 +69,10 @@ F0 = Pr*A_inv0*adjoint(Ps)
 
 #####################################################################################
 
-G = Forward(F,q)
-
 function misfit_objective(d_obs, m0, G)
 
 	# Data residual and source residual
-  	r_data   = G(m0) - d_obs
+  	r_data   = F(m0, q) - d_obs
 
 	# Function value
 	fval = .5f0 *sum(r_data.^2)
@@ -86,9 +83,9 @@ end
 
 d_obs = G(m)
 
-J = judiJacobian(F0,q)
+J = judiJacobian(F0, q)
 
-gradient_m = adjoint(J)*vec(G(m0)-d_obs)
+gradient_m = adjoint(J)*vec(F(m0, q)-d_obs)
 
 gs_inv = gradient(x -> misfit_objective(d_obs, x, G), m0)
 
