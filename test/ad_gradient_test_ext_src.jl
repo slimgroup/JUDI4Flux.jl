@@ -3,7 +3,7 @@
 # Date: Aug 2020
 #
 using JUDI4Flux, JUDI, Flux
-using Test, ImageFiltering, LinearAlgebra, Random
+using Test, LinearAlgebra, Random
 
 Random.seed!(11)
 
@@ -13,12 +13,14 @@ d = (10., 10.)
 o = (0., 0.)
 
 # Velocity [km/s]
-v = ones(Float32,n) .+ 0.4f0
+v = ones(Float32,n) .+ 0.5f0
 v[:, Int(round(end/2)):end] .= 4f0
+v0 = 1f0 .* v
+v0[:, 2:end-1] .= 1f0/3f0 .* (v0[:, 1:end-2] + v0[:, 2:end-1] + v0[:, 3:end])
 
 # Slowness squared [s^2/km^2]
 m = (1f0 ./ v).^2
-m0 = imfilter(m, Float32.(Kernel.gaussian(10)))
+m0 = (1f0 ./ v0).^2
 
 # Setup info and model structure
 nsrc = 4	# number of sources
@@ -96,7 +98,7 @@ end
 q = GenSimSourceMulti(xsrc_index, zsrc_index, nsrc, model.n);
 q0 = deepcopy(q)
 for i = 1:nsrc
-    q0[:,:,1,i] = imfilter(q[:,:,1,i], Float32.(Kernel.gaussian(10)))
+    q0[:,:,1,i] = q[:,:,1,i] .* (1f0 .+ randn(Float32, size(q[:,:,1,i])))
 end
 
 d_obs = F(m, q)
@@ -109,5 +111,6 @@ gs_inv = gradient(x -> misfit_objective(d_obs, q0, x, F), m0)
 g1 = vec(gradient_m)
 g2 = vec(gs_inv[1])
 
-@test isapprox(norm(g1-g2) / norm(g1), 0f0; atol=1f-1)
-@test isapprox(dot(g1,g2)/norm(g1)/norm(g2),1f0;rtol=1f-1)
+@test isapprox(norm(g1 - g2) / norm(g1 + g2), 0f0; atol=ftol)
+@test isapprox(dot(g1, g2)/norm(g1)^2,1f0;rtol=ftol)
+@test isapprox(dot(g1, g2)/norm(g2)^2,1f0;rtol=ftol)

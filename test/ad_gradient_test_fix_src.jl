@@ -3,7 +3,7 @@
 # Date: Mar 2021
 #
 using JUDI4Flux, JUDI, Flux
-using Test, ImageFiltering, LinearAlgebra, Random
+using Test, LinearAlgebra, Random
 
 Random.seed!(11)
 
@@ -15,10 +15,12 @@ o = (0., 0.)
 # Velocity [km/s]
 v = ones(Float32,n) .+ 0.4f0
 v[:, Int(round(end/2)):end] .= 4f0
+v0 = 1f0 .* v
+v0[:, 2:end-1] .= 1f0/3f0 .* (v0[:, 1:end-2] + v0[:, 2:end-1] + v0[:, 3:end])
 
 # Slowness squared [s^2/km^2]
 m = (1f0 ./ v).^2
-m0 = imfilter(m, Float32.(Kernel.gaussian(10)))
+m0 = (1f0 ./ v0).^2
 
 # Setup info and model structure
 nsrc = 4	# number of sources
@@ -69,7 +71,7 @@ F0 = Pr*A_inv0*adjoint(Ps)
 
 #####################################################################################
 
-function misfit_objective(d_obs, m0, G)
+function misfit_objective(d_obs, m0, F)
 
 	# Data residual and source residual
   	r_data   = F(m0, q) - d_obs
@@ -81,16 +83,18 @@ function misfit_objective(d_obs, m0, G)
 	return fval
 end
 
-d_obs = G(m)
+d_obs = F(m, q)
 
 J = judiJacobian(F0, q)
 
-gradient_m = adjoint(J)*vec(F(m0, q)-d_obs)
+gradient_m = adjoint(J)*vec(F(m0, q)- d_obs)
 
-gs_inv = gradient(x -> misfit_objective(d_obs, x, G), m0)
+gs_inv = gradient(x -> misfit_objective(d_obs, x, F), m0)
 
 g1 = vec(gradient_m)
 g2 = vec(gs_inv[1])
 
-@test isapprox(norm(g1-g2) / norm(g1), 0f0; atol=1f-1)
-@test isapprox(dot(g1,g2)/norm(g1)/norm(g2),1f0;rtol=1f-1)
+@test isapprox(norm(g1 - g2) / norm(g1 + g2), 0f0; atol=ftol)
+@test isapprox(dot(g1, g2)/norm(g1)^2,1f0;rtol=ftol)
+@test isapprox(dot(g1, g2)/norm(g2)^2,1f0;rtol=ftol)
+

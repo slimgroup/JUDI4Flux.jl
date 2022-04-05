@@ -4,9 +4,13 @@
 #
 
 using JUDI, Flux, JUDI4Flux
-using Test, ImageFiltering, LinearAlgebra, Random
+using Test, LinearAlgebra, Random
+
+stol = 5f-2
 
 Random.seed!(11)
+
+mean(x)= sum(x)/length(x)
 
 # Set up model structure
 n = (120, 100)   # (x,y,z) or (x,z)
@@ -15,8 +19,9 @@ o = (0., 0.)
 
 # Velocity [km/s]
 v = ones(Float32,n) .+ 0.4f0
-v[:, Int(round(end/2)):end] .= 4f0
-v0 = imfilter(v, Float32.(Kernel.gaussian(10)))
+v[:, Int(round(end/2)):end] .= 3f0
+v0 = 1f0 .* v
+v0[:, 2:end-1] .= 1f0/3f0 .* (v0[:, 1:end-2] + v0[:, 2:end-1] + v0[:, 3:end])
 
 # Slowness squared [s^2/km^2]
 m = (1f0 ./ v).^2
@@ -91,8 +96,11 @@ for j=1:maxiter
     global h = h/2f0
 end
 
-@test isapprox(err1[end] / (err1[1]/2^(maxiter-1)), 1f0; atol=1f1)
-@test isapprox(err2[end] / (err2[1]/4^(maxiter-1)), 1f0; atol=1f1)
+rate1 = err1[1:end-1]./err1[2:end]
+rate2 = err2[1:end-1]./err2[2:end]
+@show rate1, rate2
+@test isapprox(mean(rate1), 2f0; atol=stol)
+@test isapprox(mean(rate2), 4f0; atol=stol)
 
 
 # Gradient test for extended modeling: model
@@ -117,5 +125,8 @@ for j=1:maxiter
     global h = h/2f0
 end
 
-@test isapprox(err3[end] / (err3[1]/2^(maxiter-1)), 1f0; atol=1f1)
-@test isapprox(err4[end] / (err4[1]/4^(maxiter-1)), 1f0; atol=1f1)
+rate1 = err1[1:end-1]./err1[2:end]
+rate2 = err2[1:end-1]./err2[2:end]
+@show rate1, rate2
+@test isapprox(mean(rate1), 2f0; atol=stol)
+@test isapprox(mean(rate2), 4f0; atol=stol)
