@@ -6,7 +6,7 @@
 using JUDI, Flux, JUDI4Flux, Test
 using LinearAlgebra, Random
 
-stol = 5f-2
+stol = 1f-1
 
 Random.seed!(11)
 

@@ -20,9 +20,9 @@ module JUDI4Flux
 ####################################################################################################
     function rma(v::Vector{T}, dsize::NTuple{4, Integer}, msize::NTuple{4, Integer}) where {T}
         if length(v) == prod(dsize)
-            return reshape(v, dsize...)
+            return reshape(v, dsize...)::Array{T, 4}
         else
-            return reshape(v, msize...)
+            return reshape(v, msize...)::Array{T, 4}
         end
     end
 
@@ -36,14 +36,15 @@ module JUDI4Flux
 
     function grad_w(EQF::judiPDEextended, m, Δd)
         Δw = EQF(;m=squeeze(m))' * vec(Δd)
+        nt = EQF.recGeometry.nt[1]
+        nrec = length(EQF.recGeometry.xloc[1])
         return rma(Δw, (nt, nrec, 1, EQF.info.nsrc), (EQF.model.n..., 1, EQF.info.nsrc))
     end
 
     function grad_m(EQF::judiPDEextended, w, m, Δd)
-        sqm = squeeze.((m, w))
-        mm, ww = size(sqm[2]) == EQF.model.n ? sqm : (sqm[2], sqm[1])
-        J = judiJacobian(EQF, ww)
-        Δm = J(;m=mm)' * vec(Δd)
+        ww, d = size(w) == (EQF.model.n..., 1, EQF.info.nsrc) ? (w, Δd) : (Δd, w)
+        J = judiJacobian(EQF, squeeze(ww))
+        Δm = J(;m=squeeze(m))' * vec(d)
         return reshape(Δm, EQF.model.n..., 1, 1)
     end
 

@@ -15,10 +15,10 @@ jobs:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
-      DEVITO_ARCH: gcc
+      DEVITO_ARCH: gcc-9
       DEVITO_LANGUAGE: "openmp"
       DEVITO_LOGGING: "ERROR"
-      OMP_NUM_THREADS: ${{ matrix.omp }}
+      OMP_NUM_THREADS: 2
 
     strategy:
       fail-fast: false
