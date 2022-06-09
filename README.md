@@ -1,5 +1,9 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4301017.svg)](https://doi.org/10.5281/zenodo.4301017)
 
+```diff
+-THIS PACKAGE IS DEPRECATED WITH CHAINRULES DIRECTLY INTEGRATED INTO JUDI>=V3.1.0
+```
+
 
 ## JUDI4Flux: Seismic modeling for deep learning
 
